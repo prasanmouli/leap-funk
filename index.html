@@ -3,17 +3,30 @@
 
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>Game</title>
+    <title>Leap Funk</title>
     <style type="text/css" media="screen">
+    *{ 
+      margin:0;
+      padding:0; 
+      } 
+    html, body{ 
+      width:100%;
+      height:100%; 
+      }
+    canvas{
+     display:block; 
+    }
     </style>
   </head>
 
   <body>
-    <div>
-      <canvas id="game"></canvas>
+    <div align='center' id='main'>
+      <!--canvas id="game" style="width: 900px; height: 600px; margin: 0px; padding: 0px;"></canvas-->
     </div>
     <script src="./scripts/lib/leap.min.js"></script>
+    <script src="./scripts/lib/three.min.js"></script>
     <script src="./scripts/game/shim.js"></script>
+    <script src="./scripts/game/main.js"></script>
     <script src="./scripts/game/gesture.js"></script>
   </body>
 

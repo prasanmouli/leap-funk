@@ -4,6 +4,26 @@ var scale = 2/5, step = 9; /* game to world ratio */
 var fingerAlignment = [], delta = [], pos = 0;
 var coordinates = {}, data = [], i = 0, j = 0, k = 0, start = 0, fingers;
 
+function evaluateGesture(fingerAlignment){
+  var fingerWeights = [], j = 0, move = [];
+  for(var j=0; j<3; j++){
+    fingerWeights[j] = 0;
+    for(var i=0; i<fingerAlignment.length; i++)
+      fingerWeights[j] += fingerAlignment[i][j];
+    if(fingerWeights[j] >= 4)
+      move[j] = 1/2;
+    else if(fingerWeights[j] <= -4)
+      move[j] = -1/2;
+    else if(fingerWeights[j] == 0)
+      move[j] = 0
+  }
+  /*if(fingerWeights[1]==1)
+      move[1] = 2;
+  else if(fingerWeights[1]==-1)
+      move[1] = 2;*/
+  return move;
+}
+
 Leap.loop(function(frame){
   frame.hands.forEach(function(hand, index) {
     //console.log(hand.roll());
@@ -32,6 +52,10 @@ Leap.loop(function(frame){
           }
         }
         fingerAlignment[k] = delta;
+        var move = evaluateGesture(fingerAlignment);
+        console.log(cube.position.x, move[0]);
+        if(move[0]!==undefined) cube.position.x += move[0];
+        if(move[1]!==undefined) cube.position.y += move[1];
       }
       for (k = j-1; k >= start; k--)
         delete coordinates[k];
@@ -39,6 +63,6 @@ Leap.loop(function(frame){
     }
     data = [];
     j++;
-    console.log(fingerAlignment[0],fingerAlignment[1],fingerAlignment[2],fingerAlignment[3],fingerAlignment[4]);
+    //console.log(fingerAlignment[0],fingerAlignment[1],fingerAlignment[2],fingerAlignment[3],fingerAlignment[4]);
   }
 });
