@@ -11,16 +11,12 @@ function evaluateGesture(fingerAlignment){
     for(var i=0; i<fingerAlignment.length; i++)
       fingerWeights[j] += fingerAlignment[i][j];
     if(fingerWeights[j] >= 4)
-      move[j] = 1/2;
+      move[j] = 1.5;
     else if(fingerWeights[j] <= -4)
-      move[j] = -1/2;
+      move[j] = -1.5;
     else if(fingerWeights[j] == 0)
       move[j] = 0
   }
-  /*if(fingerWeights[1]==1)
-      move[1] = 2;
-  else if(fingerWeights[1]==-1)
-      move[1] = 2;*/
   return move;
 }
 
@@ -32,9 +28,7 @@ Leap.loop(function(frame){
   for(i = 0, fingers = frame.pointables.length; i < fingers; i++)
     data[i] = frame.pointables[i].tipPosition;
   //console.log(fingers);
-  if(fingers == 0){
-  }
-  else{ 
+  if(fingers != 0){
     coordinates[j] = data;
     //console.log(coordinates)
     if(j%step == 0 && j>=step){
@@ -53,9 +47,16 @@ Leap.loop(function(frame){
         }
         fingerAlignment[k] = delta;
         var move = evaluateGesture(fingerAlignment);
-        console.log(cube.position.x, move[0]);
+        //console.log(cube.position.x, move[0]);
         if(move[0]!==undefined) cube.position.x += move[0];
         if(move[1]!==undefined) cube.position.y += move[1];
+        frame.hands.forEach(function(hand){
+          radians = hand.roll();
+          console.log(radians*180/Math.PI);
+          if(radians > Math.PI/4 && radians < Math.PI/2) worldRotate(1);
+          else if(radians > -Math.PI/2 && radians < -Math.PI/4) worldRotate(-1);
+        });
+        
       }
       for (k = j-1; k >= start; k--)
         delete coordinates[k];

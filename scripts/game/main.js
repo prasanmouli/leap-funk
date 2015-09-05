@@ -1,8 +1,9 @@
 var div = document.getElementById('main');
 
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(90, window.innerWidth/window.innerHeight, 25, 1000);
+var camera = new THREE.PerspectiveCamera(90, window.innerWidth/window.innerHeight, 18, 1000);
 var world = new THREE.Object3D();
+var worldRot = false;
 
 var renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -15,14 +16,13 @@ var colorSets = [[0x00FF00,0x90C695,0x26A65B],[0xFF0000,0xD35400,0xF4B350],[0x00
 var obstacleMaterial = new THREE.MeshBasicMaterial( {color: 0xCCCCCC, side:THREE.DoubleSide} );
 var obstacleGeometry = new THREE.PlaneGeometry(window.innerWidth/32, window.innerHeight/32);
 var obstacle = new THREE.Mesh(obstacleGeometry, obstacleMaterial);
-obstacle.rotation.z = Math.PI/4;
+obstacle.rotation.z = Math.PI/2;
 obstacle.position.z = -50;
 world.add(obstacle);
   
 var render = function () {
 	requestAnimationFrame(render);
 	obstacle.position.z += 0.5;
-	console.log(obstacle.rotation);
 	renderer.render(scene, camera);
 };
 
@@ -32,7 +32,7 @@ function init(){
 	var geometry = new THREE.BoxGeometry(10, 10, 10);
 	var material = new THREE.MeshBasicMaterial({color: colorSets[colorCode][0], wireframe: true, wireframeLinewidth: 2});
 	cube = new THREE.Mesh(geometry, material);
-	cube.rotation.x = 0.2;
+	cube.rotation.x = 0;
 	scene.add(cube);
 
 	camera.position.z = 50;
@@ -64,19 +64,11 @@ function init(){
 	world.add(wall2);
 
 	window.addEventListener('keyup', function(e){
-		angle = world.rotation.z, teta = 0;
-		if(e.keyCode == 32){
-			var T = setInterval(function(){
-				teta += Math.PI/64;
-				angle += Math.PI/64;
-				world.rotation.z = angle;
-				console.log(angle, world.rotation.z);
-				if(teta>=(Math.PI/2)){
-					clearInterval(T);
-				}
-			}, 1000/60, false);
-		}
-	})
+		if(e.keyCode == 37)
+			worldRotate(-1);
+		else if(e.keyCode == 39)
+			worldRotate(1);
+	});
 
 	/* // create a point light
 	var pointLight = new THREE.PointLight('white');
@@ -93,6 +85,24 @@ function init(){
 	scene.add(world);
 
 	render();
+}
+
+worldRotate = function(sense){
+	if(worldRot == true)
+		return;
+	else 
+		worldRot = true;
+	angle = world.rotation.z, teta = 0;
+	var T = setInterval(function(){
+		teta += sense*Math.PI/64;
+		angle += sense*Math.PI/64;
+		world.rotation.z = angle;
+		console.log(angle, world.rotation.z);
+		if((teta>=(Math.PI/2) && sense==1) || (teta<=-(Math.PI/2) && sense==-1)){
+			clearInterval(T);
+			worldRot = false;
+		}
+	}, 1000/60, false);
 }
 
 init();
