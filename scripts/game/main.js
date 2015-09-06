@@ -168,7 +168,7 @@ function obstacleFactory(cube){
 function collisionDetection(obstacleState){
 	var cX = cube.Mesh.position.x, cY = cube.Mesh.position.x, cZ = cube.Mesh.position.z, cWidth = cHeight = cDepth = 10;
     var eX, eY, eZ, eWidth, eHeight, eDepth;
-    var margin = 4;
+    var margin = 0;
 
 	for(var k=0; k<obstacleState.instances.length; k++){
 		eX = obstacleState.instances[k].Mesh.position.x;
@@ -178,7 +178,6 @@ function collisionDetection(obstacleState){
 		eHeight = obstacleState.dimensions.y[k];
 		eDepth = obstacleState.dimensions.z[k];
 
-		console.log(cX,eX,cY,eY,cZ,eZ,cWidth,cHeight,cDepth,eWidth,eHeight,eDepth);
 		if (Math.abs(cZ - eZ) <= cDepth/2 + eDepth/2 - margin) {
 			if (Math.abs(cY - eY) <= cHeight/2 + eHeight/2 - margin) {
 				if (Math.abs(cX - eX) <= cWidth/2 + eWidth/2 - margin) {
@@ -249,7 +248,7 @@ init = function(){
 	wallTexture.needsUpdate = true;
 	var wallParams = {
 		map : wallTexture, 
-		color : colorSets[colorCode][2], 
+		color : colorSets[colorCode][2],
 		side : THREE.DoubleSide
 	}, 
 	wallWidth = window.innerWidth/3, 
