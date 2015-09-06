@@ -1,10 +1,17 @@
 /* Globals */
-var colorSets = [
+/*var colorSets = [
 	['#90C695','#90C695','#26A65B'],
 	['#E87E04','#D35400','#E87E04'],
 	['#6C7A89','#95A5A6', '#6C7A89']
 	],
-	colorCode = Math.floor(Math.random()*3);
+	colorCode = Math.floor(Math.random()*3);*/
+var colorSets = [
+	['#E87E04','#D35400','#E87E04'],
+	['#90C695','#90C695','#26A65B'],
+	['#FDE3A7','#96281B','#FDE3A7'],
+	['#6C7A89','#95A5A6', '#6C7A89']
+	],
+	colorCode = Math.floor(Math.random()*4);
 
 var div = document.getElementById('main'),
 	scene = new THREE.Scene(),
@@ -36,12 +43,12 @@ function generateTexture(color, option) {
 	if(option == 1){
 	    gradient = context.createLinearGradient(0,0,size/1.9,size/1.6);
 		gradient.addColorStop(0, color);	
-	    gradient.addColorStop(1, 'black'); 
+	    gradient.addColorStop(1, '#100'); 
 	}
 	else{
 	    gradient = context.createLinearGradient(0,0,500,500);
 		gradient.addColorStop(0, color);
-		gradient.addColorStop(1, 'black'); 
+		gradient.addColorStop(1, '#100'); 
 	}
 	context.fillStyle = gradient;
 	context.fill();
@@ -143,7 +150,7 @@ function obstacleFactory(cube){
 				continue;
 			}
 			else{
-				obstacleState.instances[i].Mesh.position.z += 1.4;
+				obstacleState.instances[i].Mesh.position.z += 1.6;
 				var rand = 0.7-Math.random(), sense;
 				sense = (rand <= 0)? -1 : 1;
 				/*if(obstacleState.bidirectional[i])
@@ -161,7 +168,8 @@ function obstacleFactory(cube){
 function collisionDetection(obstacleState){
 	var cX = cube.Mesh.position.x, cY = cube.Mesh.position.x, cZ = cube.Mesh.position.z, cWidth = cHeight = cDepth = 10;
     var eX, eY, eZ, eWidth, eHeight, eDepth;
-    var margin = 5;
+    var margin = 4;
+
 	for(var k=0; k<obstacleState.instances.length; k++){
 		eX = obstacleState.instances[k].Mesh.position.x;
 		eY = obstacleState.instances[k].Mesh.position.y;
