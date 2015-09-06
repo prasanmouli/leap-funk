@@ -10,7 +10,8 @@ var div = document.getElementById('main'),
 	scene = new THREE.Scene(),
 	camera = new THREE.PerspectiveCamera(90, window.innerWidth/window.innerHeight, 18, 1000),
 	world = new THREE.Object3D(),
-	worldRot = false;
+	worldRot = false,
+	requestId;
 
 var renderer = new THREE.WebGLRenderer({
 	antialias:true, 
@@ -88,7 +89,7 @@ var weights = {
 };
 function obstacleFactory(cube){	
 	if(obstacleState.active == undefined || obstacleState.active == [] || obstacleState.active.indexOf(true) == -1){
-		var factor = Math.random(), i, w = Math.random();
+		var factor = Math.random(), i, w = Math.random(), proceed, delta, flag, k;
 		obstacleState = {
 			instances : [],
 			number : 0,
@@ -98,20 +99,39 @@ function obstacleFactory(cube){
 			},
 			bidirectional : []
 		};
-		for (i=0; i<4; i++)
-			if(weights[i]>w) obstacleState.number = i+1;
-		if(obstacleState.number == 0) 
-			obstacleState.number = 4;		
+		for (i=1; i<=4; i++)
+			if(weights[i]>w){
+				obstacleState.number = i;
+				break;
+			}
 		for(i=0; i<obstacleState.number; i++){
-			if(Math.random()>0.93) obstacleState.bidirectional[i] = true;
-			obstacleState.dimensions.x[i] = Math.floor(45 + factor*10);
-			obstacleState.dimensions.y[i] = Math.floor(30 + factor*6);
-			obstacleState.dimensions.z[i] = Math.floor(2 + factor*2);
+			proceed = false;
+			var rand = 0.5-Math.random(), sense;
+			sense = (rand <= 0)? -1 : 1;
+			if(Math.random()>0.33) obstacleState.bidirectional[i] = true;
+			obstacleState.dimensions.x[i] = Math.floor(45 + sense*factor*15);
+			obstacleState.dimensions.y[i] = Math.floor(30 + sense*factor*10);
+			obstacleState.dimensions.z[i] = Math.floor(2 + sense*factor*2);
 			obstacleState.active[i] = true;
 			obstacleState.instances[i] = new solids(obstacleState.dimensions.x[i], obstacleState.dimensions.y[i], obstacleState.dimensions.z[i], obstacleParams, 'B');
 			obstacleState.instances[i].Mesh = new THREE.Mesh(obstacleState.instances[i].Geometry, obstacleState.instances[i].Material);
 			obstacleState.instances[i].Mesh.rotation.z = Math.PI/2*Math.floor(factor*4);
-			obstacleState.instances[i].Mesh.position.z = -Math.floor(200 + factor*50);
+			/*while(proceed == false){
+				factor = Math.random();
+				flag = 0;
+				if(obstacleState.number > 1)
+					for(k=0; k<i; k++){
+						delta = Math.abs(-Math.floor(200 + factor*50) - obstacleState.instances[k].Mesh.position.z);
+						if(delta < 25){
+							flag = 1;
+							break;
+						}
+					}
+				if(flag == 0) proceed = true;
+			}*/
+			obstacleState.instances[i].Mesh.position.x = sense*Math.floor(factor*25);
+			obstacleState.instances[i].Mesh.position.y = sense*Math.floor(factor*15);
+			obstacleState.instances[i].Mesh.position.z = -Math.floor(200 + factor*100);
 			world.add(obstacleState.instances[i].Mesh);
 		}
 	}
@@ -123,24 +143,51 @@ function obstacleFactory(cube){
 				continue;
 			}
 			else{
-				obstacleState.instances[i].Mesh.position.z += 2;
-				var rand = 0.5-Math.random(), sense;
+				obstacleState.instances[i].Mesh.position.z += 1.4;
+				var rand = 0.7-Math.random(), sense;
 				sense = (rand <= 0)? -1 : 1;
-				if(obstacleState.bidirectional[i])
+				/*if(obstacleState.bidirectional[i])
 					if(obstacleState.instances[i].Mesh.rotation.z == 0 || obstacleState.instances[i].Mesh.rotation.z-Math.PI <= 0.01)
-						obstacleState.instances[i].Mesh.position.x += sense*3;
+						obstacleState.instances[i].Mesh.position.x += sense*1.2;
 					else
-						obstacleState.instances[i].Mesh.position.y += sense*3;
+						obstacleState.instances[i].Mesh.position.y += sense*1.2;*/
 			}
 		}
 	}
 	scene.add(world);
+	return obstacleState;
+}
+
+function collisionDetection(obstacleState){
+	var cX = cube.Mesh.position.x, cY = cube.Mesh.position.x, cZ = cube.Mesh.position.z, cWidth = cHeight = cDepth = 10;
+    var eX, eY, eZ, eWidth, eHeight, eDepth;
+    var margin = 5;
+	for(var k=0; k<obstacleState.instances.length; k++){
+		eX = obstacleState.instances[k].Mesh.position.x;
+		eY = obstacleState.instances[k].Mesh.position.y;
+		eZ = obstacleState.instances[k].Mesh.position.z;
+		eWidth = obstacleState.dimensions.x[k];
+		eHeight = obstacleState.dimensions.y[k];
+		eDepth = obstacleState.dimensions.z[k];
+
+		console.log(cX,eX,cY,eY,cZ,eZ,cWidth,cHeight,cDepth,eWidth,eHeight,eDepth);
+		if (Math.abs(cZ - eZ) <= cDepth/2 + eDepth/2 - margin) {
+			if (Math.abs(cY - eY) <= cHeight/2 + eHeight/2 - margin) {
+				if (Math.abs(cX - eX) <= cWidth/2 + eWidth/2 - margin) {
+					console.log('HIT');
+					console.log(cX,eX,cY,eY,cZ,eZ,cWidth,cHeight,cDepth,eWidth,eHeight,eDepth);
+					cancelAnimFrame(requestId);
+				}
+			}
+		}
+	}
 }
 
 /* The LOOP; reason for all awesomeness and misery. */
 render = function (cube){
-	requestAnimFrame(function(){render(cube);});
-	obstacleFactory(cube);
+	requestId = requestAnimFrame(function(){render(cube);});
+	obstacles = obstacleFactory(cube);
+	collisionDetection(obstacles);
 	renderer.render(scene, camera);
 };
 
