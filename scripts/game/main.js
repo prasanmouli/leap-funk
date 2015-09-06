@@ -48,7 +48,7 @@ function generateTexture(color, option) {
 	return canvas;
 }
 
-/* Solids / Planes object */
+/* Solids/Planes object */
 var solids = function(w, h, d, MeshBasic, type){
 	this.Geometry = (type == 'B') ? new THREE.BoxGeometry(w,h,d) : new THREE.PlaneGeometry(w,h);
 	this.Material = new THREE.MeshBasicMaterial(MeshBasic);
@@ -72,10 +72,75 @@ worldRotate = function(sense){
 	}, 1000/60, false);
 }
 
+/* The bad guys. Not very smart (not their fault) */
+var obstacleTexture = new THREE.Texture(generateTexture(colorSets[colorCode][0],2));
+	obstacleTexture.needsUpdate = true;
+var obstacleParams = {
+	map : obstacleTexture, 
+	color : colorSets[colorCode][0]
+};
+var obstacleState = {};
+var weights = {
+	1 : 0.5, 
+	2 : 0.75,
+	3 : 0.9,
+	4 : 0.95
+};
+function obstacleFactory(cube){	
+	if(obstacleState.active == undefined || obstacleState.active == [] || obstacleState.active.indexOf(true) == -1){
+		var factor = Math.random(), i, w = Math.random();
+		obstacleState = {
+			instances : [],
+			number : 0,
+			active : [],
+			dimensions : {
+				x : [], y : [],	z : []
+			},
+			bidirectional : []
+		};
+		for (i=0; i<4; i++)
+			if(weights[i]>w) obstacleState.number = i+1;
+		if(obstacleState.number == 0) 
+			obstacleState.number = 4;		
+		for(i=0; i<obstacleState.number; i++){
+			if(Math.random()>0.93) obstacleState.bidirectional[i] = true;
+			obstacleState.dimensions.x[i] = Math.floor(45 + factor*10);
+			obstacleState.dimensions.y[i] = Math.floor(30 + factor*6);
+			obstacleState.dimensions.z[i] = Math.floor(2 + factor*2);
+			obstacleState.active[i] = true;
+			obstacleState.instances[i] = new solids(obstacleState.dimensions.x[i], obstacleState.dimensions.y[i], obstacleState.dimensions.z[i], obstacleParams, 'B');
+			obstacleState.instances[i].Mesh = new THREE.Mesh(obstacleState.instances[i].Geometry, obstacleState.instances[i].Material);
+			obstacleState.instances[i].Mesh.rotation.z = Math.PI/2*Math.floor(factor*4);
+			obstacleState.instances[i].Mesh.position.z = -Math.floor(200 + factor*50);
+			world.add(obstacleState.instances[i].Mesh);
+		}
+	}
+	else{
+		for(i=0; i<obstacleState.number; i++){
+			if(obstacleState.instances[i].Mesh.position.z > 10+cube.Mesh.position.z){
+				obstacleState.instances[i].Mesh.position.z += 20000;
+				obstacleState.active[i] = false;
+				continue;
+			}
+			else{
+				obstacleState.instances[i].Mesh.position.z += 2;
+				var rand = 0.5-Math.random(), sense;
+				sense = (rand <= 0)? -1 : 1;
+				if(obstacleState.bidirectional[i])
+					if(obstacleState.instances[i].Mesh.rotation.z == 0 || obstacleState.instances[i].Mesh.rotation.z-Math.PI <= 0.01)
+						obstacleState.instances[i].Mesh.position.x += sense*3;
+					else
+						obstacleState.instances[i].Mesh.position.y += sense*3;
+			}
+		}
+	}
+	scene.add(world);
+}
+
 /* The LOOP; reason for all awesomeness and misery. */
-render = function (AA){
-	requestAnimFrame(function(){render(AA);});
-	AA.position.z += 2;
+render = function (cube){
+	requestAnimFrame(function(){render(cube);});
+	obstacleFactory(cube);
 	renderer.render(scene, camera);
 };
 
@@ -102,25 +167,6 @@ init = function(){
 	scene.add(cube.Mesh);
 
 	camera.position.z = 50;
-
-	/* The bad guys. Not very smart (not their fault) */	
-	var obstacleTexture = new THREE.Texture(generateTexture(colorSets[colorCode][0],2));
-	obstacleTexture.needsUpdate = true;
-	var obstacleParams = {
-		map: obstacleTexture, 
-		color: colorSets[colorCode][0]
-		//wireframe: true, 
-		//wireframeLinewidth: 2
-	};
-
-	var obstacle = new solids(50, 30, 2, obstacleParams, 'B');
-	obstacle.Mesh = new THREE.Mesh(obstacle.Geometry, obstacle.Material);
-	obstacle.Mesh.position.y = -20;
-	obstacle.Mesh.rotation.z = 0;
-	obstacle.Mesh.position.z = -250;
-	obstacle.Mesh.rotation.x = Math.PI/8;
-	world.add(obstacle.Mesh);
-
 
 	/* The Surrounding; Our Viewport; Floors, Ceilings and Walls */
 	var floorTexture = new THREE.Texture(generateTexture(colorSets[colorCode][1],1));
@@ -166,9 +212,8 @@ init = function(){
 	rightW.Mesh.rotation.y = Math.PI/2;
 	world.add(rightW.Mesh);
 
-	/* Dump everything to the scene, render and pray! */
-	scene.add(world);
-	render(obstacle.Mesh);
+	/* Dump everything to the scene, render and then pray! */
+	render(cube);
 }
 
 window.addEventListener('keyup', function(e){

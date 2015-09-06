@@ -1,6 +1,6 @@
 var info = document.getElementById('main');
 
-var scale = 2/5, step = 4; /* game to world ratio */
+var scale = 2/5, step = 4; /* scale is the game to world ratio */
 var fingerAlignment = [], delta = [], pos = 0;
 var coordinates = {}, data = [], i = 0, j = 0, k = 0, start = 0, fingers;
 
